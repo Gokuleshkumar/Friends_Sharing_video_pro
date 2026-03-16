@@ -421,5 +421,13 @@ function App() {
     </>
   );
 }
+function App() {
+  return (
+    <div>
+      <h1>Friends Video Sharing System</h1>
+      <p>Watch videos together with your friends in real time.</p>
+    </div>
+  )
+}
 
 export default App;
