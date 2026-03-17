@@ -1,37 +1,41 @@
-import React, { useState, useEffect, useRef } from 'react';
-import Peer from 'peerjs';
-import ReactPlayer from 'react-player';
-import Button from '@mui/material/Button';
-import Header from './UIComponents/Header';
-import {Box, Typography,Stack,Container,TextField, Grid } from '@mui/material';
-import MicOffIcon from '@mui/icons-material/MicOff';
-import MicIcon from '@mui/icons-material/Mic';
-import VideocamIcon from '@mui/icons-material/Videocam';
-import VideocamOffIcon from '@mui/icons-material/VideocamOff';
-import CallEndIcon from '@mui/icons-material/CallEnd';
-import Footer from './UIComponents/Footer';
-import CopyToClipboardButton from './UIComponents/CopyToClipboardButton';
-import ShareMeetingInfo from './UIComponents/ShareMeetInfo';
-
+import React, { useState, useEffect, useRef } from "react";
+import Peer from "peerjs";
+import ReactPlayer from "react-player";
+import Button from "@mui/material/Button";
+import Header from "./UIComponents/Header";
+import {
+  Box,
+  Typography,
+  Stack,
+  Container,
+  TextField
+} from "@mui/material";
+import MicOffIcon from "@mui/icons-material/MicOff";
+import MicIcon from "@mui/icons-material/Mic";
+import VideocamIcon from "@mui/icons-material/Videocam";
+import VideocamOffIcon from "@mui/icons-material/VideocamOff";
+import CallEndIcon from "@mui/icons-material/CallEnd";
+import Footer from "./UIComponents/Footer";
+import CopyToClipboardButton from "./UIComponents/CopyToClipboardButton";
+import ShareMeetingInfo from "./UIComponents/ShareMeetInfo";
 
 function App() {
-  const [peerId, setPeerID] = useState('');
-  const [remotePeerId, setRemotePeerId] = useState('');
-  const [message, setMessage] = useState('');
+  const [peerId, setPeerID] = useState("");
+  const [remotePeerId, setRemotePeerId] = useState("");
+  const [message, setMessage] = useState("");
   const [isVideoOn, setVideoOn] = useState(true);
   const [isAudioOn, setAudioOn] = useState(true);
-  const[isOnCall,setIsOnCall] = useState(false);
-  const[youtubeLink,setYoutubeLink]=useState('');
+  const [isOnCall, setIsOnCall] = useState(false);
+  const [youtubeLink, setYoutubeLink] = useState("");
   const [isPlaying, setIsPlaying] = useState(false);
-  const[pipMode,setPipMode]=useState(false);
-  const[recievedMessages,setReceievedMessages]=useState(["hi","hello"]);
+  const [pipMode, setPipMode] = useState(false);
+
   const ourConnection = useRef(null);
   const ourVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const peerInstance = useRef(null);
-  const videoPlayerRef =useRef(null);
+  const videoPlayerRef = useRef(null);
 
-  // Function to toggle video
   const toggleVideo = () => {
     if (ourVideoRef.current.srcObject) {
       const tracks = ourVideoRef.current.srcObject.getVideoTracks();
@@ -42,7 +46,6 @@ function App() {
     }
   };
 
-  // Function to toggle audio
   const toggleAudio = () => {
     if (ourVideoRef.current.srcObject) {
       const tracks = ourVideoRef.current.srcObject.getAudioTracks();
@@ -53,379 +56,216 @@ function App() {
     }
   };
 
-  //toggle video play
-  const togglePlay=()=>{
-    const playStatus = isPlaying ? "Pause" : "Play";  
+  const togglePlay = () => {
+    const playStatus = isPlaying ? "Pause" : "Play";
     ourConnection.current.send(`Play ${playStatus}`);
     setIsPlaying(!isPlaying);
-  }
+  };
 
-  // End Call
   const endCall = () => {
-    ourConnection.current.send("End Call --> Call ended");
-    if (ourVideoRef.current && ourVideoRef.current.srcObject) {
-      const tracks = ourVideoRef.current.srcObject.getTracks();
-      tracks.forEach((track) => track.stop());
+    if (ourConnection.current) {
+      ourConnection.current.send("End Call");
     }
-    if (remoteVideoRef.current && remoteVideoRef.current.srcObject) {
-      const tracks = remoteVideoRef.current.srcObject.getTracks();
-      tracks.forEach((track) => track.stop());
+
+    if (ourVideoRef.current?.srcObject) {
+      ourVideoRef.current.srcObject.getTracks().forEach((track) => track.stop());
     }
+
+    if (remoteVideoRef.current?.srcObject) {
+      remoteVideoRef.current.srcObject.getTracks().forEach((track) => track.stop());
+    }
+
     if (peerInstance.current) {
       peerInstance.current.destroy();
     }
+
     setIsOnCall(false);
-    document.removeEventListener('visibilitychange', handleVisibilityChange);
-    // Refresh the webpage
-  window.location.reload();
-
+    window.location.reload();
   };
 
-  // Function to handle the YouTube video link
   const handleYoutubeLink = () => {
-    // Use the YouTube video link to render the video
     ourConnection.current.send(`Youtube-link ${youtubeLink}`);
-    setYoutubeLink(youtubeLink); // Set the state to trigger a re-render
   };
 
-  //Function to handle pip
   const handleVisibilityChange = () => {
-   
-    if (document.visibilityState === 'hidden') {
-      ourConnection.current.send("Enable into pip mode!!");
+    if (document.visibilityState === "hidden") {
       setPipMode(true);
     } else {
-      ourConnection.current.send("Disable into pip mode!!");
       setPipMode(false);
     }
   };
 
-
-  // Initialize the Peer connection
   useEffect(() => {
     const peer = new Peer();
 
-    // Get local peer ID
-    peer.on('open', (id) => {
+    peer.on("open", (id) => {
       setPeerID(id);
     });
 
-    // while connection
-    peer.on('connection', (conn) => {
-      console.log('Connected!!');
-      console.log(conn);
+    peer.on("connection", (conn) => {
       ourConnection.current = conn;
-      conn.on('open', function() {
-        // Receive messages
-        conn.on('data', function(data) {
-          if(data.startsWith('Youtube-link'))
-          {
-              setYoutubeLink(data.split(' ')[1]);
-          }
-          if(data.startsWith('Play'))
-          {
-            const status = data.split(" ")[1];
-            setIsPlaying(status === "Play");
-          }
-          if(data.startsWith("End"))
-          {
-            console.log("Comes inside End Call--->")
-            if (ourVideoRef.current && ourVideoRef.current.srcObject) {
-              const tracks = ourVideoRef.current.srcObject.getTracks();
-              tracks.forEach((track) => track.stop());
-            }
-            if (remoteVideoRef.current && remoteVideoRef.current.srcObject) {
-              const tracks = remoteVideoRef.current.srcObject.getTracks();
-              tracks.forEach((track) => track.stop());
-            }
-            if (peerInstance.current) {
-              peerInstance.current.destroy();
-            }
-            setIsOnCall(false);
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
-            // Refresh the webpage
-            window.location.reload();
-          }
-          console.log(data.startsWith('End'))
-          console.log('Received', data);
-          setReceievedMessages([...recievedMessages,data]);
-        });
-        
-      
-          // Send messages
-          conn.send('Hello from reciever !!');
-        });
-    });
 
-    // Set the current peer instance
-    peerInstance.current = peer;
+      conn.on("data", (data) => {
+        if (data.startsWith("Youtube-link")) {
+          setYoutubeLink(data.split(" ")[1]);
+        }
 
-    // Handle incoming calls
-    peerInstance.current?.on('call', (call) => {
-      setIsOnCall(true);
-      var getUserMedia =
-        navigator.getUserMedia ||
-        navigator.webkitGetUserMedia ||
-        navigator.mozGetUserMedia;
+        if (data.startsWith("Play")) {
+          const status = data.split(" ")[1];
+          setIsPlaying(status === "Play");
+        }
 
-      getUserMedia({ video: true, audio: true }, (mediaStream) => {
-        ourVideoRef.current.srcObject = mediaStream;
-        ourVideoRef.current.onloadedmetadata = () => {
-          ourVideoRef.current.play().catch((error) => console.log(error));
-        };
-
-        call.answer(mediaStream);
-
-        call.on('stream', (remoteStream) => {
-          remoteVideoRef.current.srcObject = remoteStream;
-          remoteVideoRef.current.onloadedmetadata = () => {
-            remoteVideoRef.current.play().catch((error) => console.log(error));
-          };
-        });
-
-        toggleVideo();
-
-        //add event Listener for enabling PIP mode
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-        
+        if (data.startsWith("End")) {
+          endCall();
+        }
       });
     });
+
+    peer.on("call", (call) => {
+      setIsOnCall(true);
+
+      navigator.mediaDevices
+        .getUserMedia({ video: true, audio: true })
+        .then((stream) => {
+          ourVideoRef.current.srcObject = stream;
+          call.answer(stream);
+
+          call.on("stream", (remoteStream) => {
+            remoteVideoRef.current.srcObject = remoteStream;
+          });
+
+          document.addEventListener("visibilitychange", handleVisibilityChange);
+        });
+    });
+
+    peerInstance.current = peer;
   }, []);
 
-  // Initiate a call to the remote peer
   const callPeer = (remotePeerId) => {
     setIsOnCall(true);
-    console.log('Trying to connect.....');
+
     ourConnection.current = peerInstance.current.connect(remotePeerId);
-    if (ourConnection.current) console.log('Connection Established!!');
-    console.log(ourConnection.current);
-    ourConnection.current.on('open', function() {
-      // Receive messages
-      ourConnection.current.on('data', function(data) {
-        if(data.startsWith('Youtube-link'))
-          {
-            setYoutubeLink(data.split(' ')[1]);
-           
-          }
-          if(data.startsWith("Play"))
-          {
-            const status = data.split(" ")[1];
-            setIsPlaying(status === "Play");
-          }
-          if(data.startsWith("End"))
-          {
-            console.log("Comes inside End Call--->")
 
-            if (ourVideoRef.current && ourVideoRef.current.srcObject) {
-              const tracks = ourVideoRef.current.srcObject.getTracks();
-              tracks.forEach((track) => track.stop());
-            }
-            if (remoteVideoRef.current && remoteVideoRef.current.srcObject) {
-              const tracks = remoteVideoRef.current.srcObject.getTracks();
-              tracks.forEach((track) => track.stop());
-            }
-            if (peerInstance.current) {
-              peerInstance.current.destroy();
-            }
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
-            setIsOnCall(false);
-            // Refresh the webpage
-            window.location.reload();
-          }
-    
-        console.log('Received', data);
+    navigator.mediaDevices
+      .getUserMedia({ video: true, audio: true })
+      .then((stream) => {
+        ourVideoRef.current.srcObject = stream;
 
-        setReceievedMessages([...recievedMessages,data]);
+        const call = peerInstance.current.call(remotePeerId, stream);
+
+        call.on("stream", (remoteStream) => {
+          remoteVideoRef.current.srcObject = remoteStream;
+        });
       });
-    
-      // Send messages
-      ourConnection.current.send('Hello From Caller  !');
-    });
-    
-    var getUserMedia =
-      navigator.getUserMedia ||
-      navigator.webkitGetUserMedia ||
-      navigator.mozGetUserMedia;
 
-    getUserMedia({ video: true, audio: true }, (ourStream) => {
-      const call = peerInstance.current.call(remotePeerId, ourStream);
-
-      ourVideoRef.current.srcObject = ourStream;
-      ourVideoRef.current.onloadedmetadata = () => {
-        ourVideoRef.current.play().catch((error) => console.log(error));
-      };
-
-      call.on('stream', (remoteStream) => {
-        remoteVideoRef.current.srcObject = remoteStream;
-        remoteVideoRef.current.onloadedmetadata = () => {
-          remoteVideoRef.current.play().catch((error) => console.log(error));
-        };
-      });
-      toggleVideo();
-      document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    });
+    document.addEventListener("visibilitychange", handleVisibilityChange);
   };
 
-  // Function to send messages between peers
-  const sendMessage = () => {  
-    ourConnection.current.send(message);
-    setMessage("");
-  };
-
-
-  //Functions to handle Synchronized Video
-  const handleSeek=()=>{
-    ourConnection.current.send("Seeking to ",videoPlayerRef.current.getCurrentTime());
-
-  }
-
-  const handlePlay=()=>{
-    ourConnection.current.send("Start play the video if you are already not!!")
-  }
-
-  const handlePause=()=>{
-    ourConnection.current.send("Pause the video if you are already not!!")
-  }
-
- 
   return (
     <>
-    <Header />
-    <main>
-    {!isOnCall &&
-    <Box
-          sx={{
-            bgcolor: 'background.paper',
-            pt: 8,
-            pb: 6,
-          }}
-        >
-          <Container maxWidth="sm">
-            <Typography
-              component="h1"
-              variant="h2"
-              align="center"
-              color="text.primary"
-              gutterBottom
-            >
-              Let's Connect! 
-            </Typography>
-            <Typography variant="h5" align="center" color="text.secondary" paragraph>
-            Your Meeting ID: {peerId} <CopyToClipboardButton id={peerId} />
-              <ShareMeetingInfo peerId={peerId} />
-            </Typography>
+      <Header />
 
-            <Stack
-              sx={{ pt: 4 }}
-              direction="row"
-              spacing={2}
-              justifyContent="center"
-            >
-               <TextField
-               size='small'
-                id="outlined-password-input"
-                label="Reciever ID"
-                value={remotePeerId}
-                onChange={(e) => setRemotePeerId(e.target.value)}
-              />
-              <Button size='medium' variant="contained" onClick={() => callPeer(remotePeerId)}>Call
-              </Button>
+      <main>
 
-             
-              
-            </Stack>
-      
-           
-          </Container>
-          
-        </Box>}
-     
-      
-   
+        {/* Title Section */}
+        <Box textAlign="center" mt={4}>
+          <Typography variant="h4">
+            Friends Video Sharing System
+          </Typography>
+          <Typography variant="body1">
+            Watch videos together with your friends in real time
+          </Typography>
+        </Box>
 
-     {isOnCall &&<>
-     
-      <Stack
-              sx={{ pt: 6 }}
-              direction="row"
-              spacing={2}
-              justifyContent="center"
-            >
-               <TextField
-                size='small'
-                label="URL"
+        {!isOnCall && (
+          <Box sx={{ pt: 8, pb: 6 }}>
+            <Container maxWidth="sm">
+              <Typography variant="h5" align="center">
+                Your Meeting ID: {peerId}
+              </Typography>
+
+              <Stack direction="row" spacing={2} justifyContent="center" mt={3}>
+                <TextField
+                  size="small"
+                  label="Receiver ID"
+                  value={remotePeerId}
+                  onChange={(e) => setRemotePeerId(e.target.value)}
+                />
+
+                <Button
+                  variant="contained"
+                  onClick={() => callPeer(remotePeerId)}
+                >
+                  Call
+                </Button>
+              </Stack>
+            </Container>
+          </Box>
+        )}
+
+        {isOnCall && (
+          <>
+            <Stack direction="row" spacing={2} justifyContent="center" mt={4}>
+              <TextField
+                size="small"
+                label="YouTube URL"
                 value={youtubeLink}
                 onChange={(e) => setYoutubeLink(e.target.value)}
               />
-              
-              <Button size='small' variant="contained" onClick={() => handleYoutubeLink()}> Send Video
-              </Button>
-              
-            </Stack>
-    {youtubeLink &&
-    <>
-        <Stack mt={2}>
-        <ReactPlayer 
-            ref={videoPlayerRef}
-            url={youtubeLink} 
-            width={"100%"}
-            pip={pipMode}
-            onSeek={handleSeek}
-            onPlay={handlePlay}
-            onPause={handlePause}
-            controls
-           playing={isPlaying}
-            />
-      </Stack>
-      <Stack
-      justifyContent="center"
-      alignItems="center">
-        <Box m={2} p={2}>
-      <Button size='small' variant="contained" onClick={togglePlay}>
-      {isPlaying ? 'Pause' : 'Play'}
-      </Button>
-      </Box>
-      </Stack>
-      </>
-   }
-      <Stack 
-      mt="2"
-      justifyContent="center"
-      alignItems="center"
-        spacing={{ xs: 1, sm: 2 }} direction="row" useFlexGap flexWrap="wrap">
-        <video ref={ourVideoRef} width="300" height="170"  autoPlay playsInline muted />
-        <video ref={remoteVideoRef} width="300" height="170"  autoPlay playsInline  />
-      </Stack>
-      <Stack   justifyContent="center"
-        alignItems="center"
-      spacing={{ xs: 1, sm: 2 }}
-      direction="row" useFlexGap flexWrap="wrap">
-        <Button variant="contained" onClick={toggleVideo}>
-          {isVideoOn ? <VideocamIcon /> : <VideocamOffIcon />}
-        </Button>
-        <Button variant="contained" onClick={toggleAudio}>
-          {isAudioOn ? <MicIcon /> : <MicOffIcon />}    
-        </Button>
 
-        <Button variant="contained" onClick={endCall}>
-          <CallEndIcon />
-        </Button>
-      </Stack>
-      </>}
-    
-    
-    
+              <Button variant="contained" onClick={handleYoutubeLink}>
+                Send Video
+              </Button>
+            </Stack>
+
+            {youtubeLink && (
+              <Stack mt={3}>
+                <ReactPlayer
+                  ref={videoPlayerRef}
+                  url={youtubeLink}
+                  width="100%"
+                  pip={pipMode}
+                  controls
+                  playing={isPlaying}
+                />
+              </Stack>
+            )}
+
+            <Stack
+              direction="row"
+              justifyContent="center"
+              spacing={2}
+              mt={3}
+            >
+              <video ref={ourVideoRef} width="300" autoPlay muted />
+              <video ref={remoteVideoRef} width="300" autoPlay />
+            </Stack>
+
+            <Stack
+              direction="row"
+              justifyContent="center"
+              spacing={2}
+              mt={3}
+            >
+              <Button variant="contained" onClick={toggleVideo}>
+                {isVideoOn ? <VideocamIcon /> : <VideocamOffIcon />}
+              </Button>
+
+              <Button variant="contained" onClick={toggleAudio}>
+                {isAudioOn ? <MicIcon /> : <MicOffIcon />}
+              </Button>
+
+              <Button variant="contained" onClick={endCall}>
+                <CallEndIcon />
+              </Button>
+            </Stack>
+          </>
+        )}
       </main>
+
       <Footer />
     </>
   );
 }
-     <div>
-      <h1>Friends Video Sharing System</h1>
-      <p>Watch videos together with your friends in real time.</p>
-    </div>
-  
-
 
 export default App;
