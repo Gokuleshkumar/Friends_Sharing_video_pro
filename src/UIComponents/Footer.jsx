@@ -1,21 +1,30 @@
-import React from 'react'
-import { Typography, Box } from '@mui/material'
-import Copyright from './CopyRight';
-export default function Footer() {
+import React from "react";
+import { Box, Typography } from "@mui/material";
+
+function Footer() {
   return (
-    <Box sx={{ bgcolor: 'background.paper', p: 6 }} component="footer">
-    <Typography variant="h6" align="center" gutterBottom>
-      For You
-    </Typography>
-    <Typography
-      variant="subtitle1"
-      align="center"
-      color="text.secondary"
-      component="p"
+    <Box
+      sx={{
+        mt: 8,
+        py: 5,
+        textAlign: "center",
+        background: "linear-gradient(135deg, #667eea, #764ba2)",
+        color: "white"
+      }}
     >
-      With lots of Love💙
-    </Typography>
-    <Copyright />
-  </Box>
-  )
+      <Typography variant="h6" fontWeight={600}>
+        For You 💙
+      </Typography>
+
+      <Typography variant="body2" sx={{ opacity: 0.9, mt: 1 }}>
+        Watch together. Stay connected.
+      </Typography>
+
+      <Typography variant="caption" sx={{ display: "block", mt: 2 }}>
+        © 2026 Gokulesh Kumar
+      </Typography>
+    </Box>
+  );
 }
+
+export default Footer;

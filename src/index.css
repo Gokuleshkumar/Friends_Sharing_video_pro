@@ -10,3 +10,72 @@
   .react-player > div {
     position: absolute; 
   }
+  body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f5f7fb;
+}
+
+/* Container */
+.app-container {
+  text-align: center;
+}
+
+/* Header */
+.header {
+  background: #4a7c6f;
+  color: white;
+  padding: 15px;
+  font-size: 20px;
+}
+
+/* Main Layout */
+.main {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  padding: 40px;
+}
+
+/* Video Box */
+.video-section {
+  width: 500px;
+  height: 300px;
+  background: #ddd;
+  border-radius: 12px;
+}
+
+/* Controls */
+.controls-section {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Input */
+input {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+/* Button */
+button {
+  padding: 10px 20px;
+  background: #4a7c6f;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #3a6257;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(circle at top, #1e293b, #020617);
+  color: white;
+  font-family: 'Inter', sans-serif;
+}
